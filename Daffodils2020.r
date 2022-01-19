@@ -195,7 +195,7 @@ merge_summaries <- function(xlsx_path){
   }
   
   #changing names of duplicate labels with negative values by adding suffix (neg)
-  df_trimmed <- df_2 %>%
+  df_trimmed <- df %>%
     mutate(label_suffix = case_when(trans_amount<0 ~ ' (neg)', TRUE ~ '')) %>%
     mutate(labels = paste(labels, label_suffix)) %>% select(-label_suffix)
   
@@ -258,7 +258,7 @@ paths <- get_file_paths()
 # commented as it is used inside summary_for_period function
 #cells <- xlsx_cells(conv_file)
 
-df_summary <- merge_summaries(paths) #change to conv_file or even that cells object
+df_summary <- merge_summaries(xls_path) #change to conv_file or even that cells object
 #TODO: change summary_for_period function so it can take in xls files
 
 df <- parse_xls_table(paths, sheet_name) #change to conv_file 
