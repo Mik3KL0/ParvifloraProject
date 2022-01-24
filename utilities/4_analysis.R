@@ -1,5 +1,5 @@
 ### Analysis 
-# This script defines functions used to perform analysis of Parvidlora sales
+# This script defines functions used to perform analysis of Parviflora sales
 # create plots etc.
 # please use ggplot2 library
 
@@ -52,7 +52,7 @@ horizontal_bar_stores <- function(df, period) {
     ' 
     B U R D E L  K L O S K I
     
-    N I E  D O T Y K A Æ
+    N I E  D O T Y K A ?
     '
 # gowno_plot <- function(df_analysis, period){
 #   'Create some plots... and save them in the end'
@@ -77,7 +77,7 @@ horizontal_bar_stores <- function(df, period) {
 # }
 
 horizontal_bar_stores_counts <- function(df_analysis, get_period_header){
-  'Amount of flowers sold in total over the three month period. Weirdly, high discrepancy in revenue and counts for Katowice or Rzeszów'
+  'Amount of flowers sold in total over the three month period. Weirdly, high discrepancy in revenue and counts for Katowice or Rzesz?w'
   
   ggplot(df_analysis, aes(x = reorder(store_name, count_total) , y = count_total)) + 
     geom_bar(stat="identity") + coord_flip() + 
@@ -88,6 +88,29 @@ horizontal_bar_stores_counts <- function(df_analysis, get_period_header){
 ===============================================================================================================================
   save_plot("blabla.png")
 }
+
+bar_flower_month <- function(df, pos = c("rev", "count"), daf = TRUE) {
+  '
+  Function creates a facet grid of bar charts with flower data for separate month in each plot.
+  Inputs:
+    -> df - Parviflora data.frame it its final form
+    -> pos - whether the bar plot are going to show revenue per flower type (rev) or count of orders of flower type (count)
+    -> daf - wheter or not to show Daffodil data, cause in revenue it is a very big outlier and so we may want to show chart without daffodil data
+  Output:
+    <- ggplot chart
+  '
+  
+  df %>%
+    tidyr::pivot_longer(count_Azalea:rev_Daffodil, names_to = 'flower', values_to = 'value') %>%  #pivoting data to make plotting possible
+    dplyr::filter(stringr::str_detect(flower, pos)) %>% #filtering to rows with only count or revenue (depending on the pos argument)
+    dplyr::filter(!flower == ifelse(daf == FALSE, 'rev_Daffodil', ''))  %>% #filtering out Daffodil data (depending on the daf argument)
+    dplyr::mutate(month_new = factor(month, levels = c(min(month):max(month)))) %>% #creating new month column to later arrange months in order
+    #dplyr::mutate(daffodil_flag = ifelse(str_detect(flower, '_Daffodil'), 1, 0)) %>% This line adds a flag to the data if we wanted to color only one of the bars (here Daffodils), then it is neccessary to add fill argument to aes in ggplot
+    ggplot(aes(x = reorder(flower, -value), y = value)) + geom_bar(stat = "identity") + facet_grid(.~reorder(month.name[month_new], month)) #creating a facet grid
+ 
+   
+}
+
 
 diverging_bar_stores <- function(df) {
   '
