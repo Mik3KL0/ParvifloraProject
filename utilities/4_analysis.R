@@ -174,28 +174,28 @@ bar_order_flower <- function(df, save = TRUE) {
   Function first creates data with mean order value for each flower (revenues / count), then plots it
   NIE MAM ZBYTNIO POMYSŁU NA TEN WYKRES, BO NA TĄ CHWILĘ WYGLĄDA ŚREDNIO XD
   Input:
-    -> Parviflora dataframe in its final form
+    -> df_flower_analysis object
   Output:
     <- png. file with the chart
   '
   
-  df_order <- df %>%
-    dplyr::mutate(Azalea = rev_Azalea/count_Azalea,
-                  Begonia = rev_Begonia/count_Begonia,
-                  Carnation = rev_Carnation/count_Carnation,
-                  Daffodil = rev_Daffodil/count_Daffodil) %>%
-    tidyr::pivot_longer(Azalea:Daffodil, names_to = 'flower', values_to = 'order_value')  %>%
+  df_prep <- df %>%
+    dplyr::mutate(order_value = rev / count) %>%
     dplyr::group_by(flower) %>%
     dplyr::summarize(mean_order_value = mean(order_value, na.rm = TRUE))
-
-   plt2 <- ggplot(df_order, aes(x = flower, y = mean_order_value)) + geom_bar(stat = "identity")
+  
+  p1 <- ggplot(df_prep, aes(x = flower, y = mean_order_value, fill = flower)) + 
+    geom_bar(stat = "identity") +
+    ylab('Average Order Value') + 
+    theme(legend.position="none")
   
    if (save) {
      save_plot("Mean_Order_per_Flower.png")
    }
   
-  return(plt2)
+  return(p1)
 }
+
 #total revenue of stores by month
 Kuba_plot <- function(df_analysis, period, save = TRUE){
   pltKuba <- df_analysis %>%
@@ -214,29 +214,46 @@ Kuba_plot <- function(df_analysis, period, save = TRUE){
   return(wykresiq)
 }
 
-bar_flower_month <- function(df, pos = c("rev", "count"), daf = TRUE, save=TRUE) {
+bar_flower_month <- function(df, daf = TRUE, save=TRUE) {
   '
-  Function creates a facet grid of bar charts with flower data for separate month in each plot.
+  Function creates a facet grid of bar charts with flower revenue for separate month in each plot.
   Inputs:
-    -> df - Parviflora data.frame it its final form
-    -> pos - whether the bar plot are going to show revenue per flower type (rev) or count of orders of flower type (count)
+    -> df - df_flower_analysis object
     -> daf - wheter or not to show Daffodil data, cause in revenue it is a very big outlier and so we may want to show chart without daffodil data
   Output:
     <- ggplot chart
   '
   
-  df <- df %>%
-    tidyr::pivot_longer(count_Azalea:rev_Daffodil, names_to = 'flower', values_to = 'value') %>%  #pivoting data to make plotting possible
-    dplyr::filter(stringr::str_detect(flower, pos)) %>% #filtering to rows with only count or revenue (depending on the pos argument)
-    dplyr::filter(!flower == ifelse(daf == FALSE, 'rev_Daffodil', ''))  %>% #filtering out Daffodil data (depending on the daf argument)
-    dplyr::mutate(month_new = factor(month, levels = c(min(month):max(month)))) #creating new month column to later arrange months in order
-    #dplyr::mutate(daffodil_flag = ifelse(str_detect(flower, '_Daffodil'), 1, 0)) %>% This line adds a flag to the data if we wanted to color only one of the bars (here Daffodils), then it is neccessary to add fill argument to aes in ggplot
-  plt <- df %>%  ggplot(aes(x = reorder(flower, -value), y = value)) + geom_bar(stat = "identity") + 
-            facet_grid(.~reorder(month.name[month_new], month)) + #creating a facet grid 
-            theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) #+ Scale_y_continuous()
+  df_prep <- df %>% 
+    dplyr::filter(!flower == ifelse(daf == FALSE, 'Daffodil', ''))
+  
+  plt <- ggplot(df_prep, aes(x = reorder(flower, -rev), y = rev, fill = flower)) + geom_bar(stat = "identity") +
+    facet_grid(.~reorder(month.name[month], month)) + #creating a facet grid 
+    theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) + #+ Scale_y_continuous()
+    xlab('') + ylab('Revenue') +
+    + theme(legend.position="none") +
+    scale_y_continuous(labels = scales::comma)
   
   if (save) {
     save_plot("flowers_by_month.png")
   }
   return(plt)
 }
+
+hist_mean_order <- function(df, save = TRUE){
+  '
+  Próbna funkcja możemy ustalić czy się przyda
+  '
+  
+  df_prep <- df_flower_analysis %>%
+    dplyr::mutate(order_value = rev / count) %>%
+    
+  plt <- ggplot(df_prep, aes(x = count, fill = flower)) + geom_histogram(bins = 8) + facet_grid(~flower, scales = "free_x")
+  
+  if (save) {
+    save_plot("histogram_mean_order.png")
+  }
+  return(plt)
+}
+
+
