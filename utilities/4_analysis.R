@@ -196,6 +196,8 @@ bar_order_flower <- function(df, save = TRUE) {
   return(p1)
 }
 
+
+
 #total revenue of stores by month
 Kuba_plot <- function(df_analysis, period, save = TRUE){
   pltKuba <- df_analysis %>%
@@ -214,7 +216,9 @@ Kuba_plot <- function(df_analysis, period, save = TRUE){
   return(wykresiq)
 }
 
+
 bar_flower_month <- function(df, daf = TRUE, save=TRUE) {
+
   '
   Function creates a facet grid of bar charts with flower revenue for separate month in each plot.
   Inputs:
@@ -240,6 +244,7 @@ bar_flower_month <- function(df, daf = TRUE, save=TRUE) {
   return(plt)
 }
 
+
 hist_mean_order <- function(df, save = TRUE){
   '
   Próbna funkcja możemy ustalić czy się przyda
@@ -252,6 +257,44 @@ hist_mean_order <- function(df, save = TRUE){
   
   if (save) {
     save_plot("histogram_mean_order.png")
+  }
+  return(plt)
+}
+
+
+scatter_count_rev <- function(df, period, save=TRUE){
+  '
+  Function creates scatter plot of relation between sales count and revenue generated
+  The dots are distinguished by flower type through the use of colors.
+  '
+  plt <- df %>% ggplot(aes(x=count, y = rev, colour = flower)) + geom_point() +
+         scale_colour_discrete(drop=TRUE, limits = levels(df$flower)) + 
+         xlab("Flower sales count") + ylab("Revenue") + 
+         labs(subtitle=paste("Parviflora stores", period), 
+            title= "Association between sales count and revenue per flower type") + 
+         theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) + 
+         scale_y_continuous(labels = scales::comma)
+  
+  if (save) {
+    save_plot("scatter_count_rev.png")
+  }
+  return(plt)
+}
+
+
+flower_composition <- function(df, period, save=TRUE){
+  '
+  Function creates stacked percent bar charts to show what is the composition of sales among stores with respect to flower type.
+  '
+  plt <- df %>% ggplot(aes(x = reorder(store_name, rev) , y = count, fill = flower)) + geom_bar(stat="identity", position="fill") + 
+         ylab("Percentage of flower sales") + xlab("Store Name") + 
+         labs(subtitle=paste("Parviflora stores", period), 
+         title= "Composition of sales by flower type") + 
+         theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
+         coord_flip() 
+  
+  if (save) {
+    save_plot("bar_composition.png")
   }
   return(plt)
 }
