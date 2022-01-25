@@ -16,6 +16,28 @@ source(list.files(pattern = "4_analysis*.R$", recursive = TRUE))
 p <- get_period_header(daff)
 ```
 
+## Data Overview
+
+```{r overview, echo=FALSE}
+print("Totals summary for Jan")
+daff %>%
+  filter(month == 1) %>%
+  select(count_total, rev_total) %>%
+  summary()
+print("Totals summary for Feb")
+daff %>%
+  filter(month == 2) %>%
+  select(count_total, rev_total) %>%
+  summary()
+print("Totals summary for March")
+daff %>%
+  filter(month == 3) %>%
+  select(count_total, rev_total) %>%
+  summary() %>%
+
+```
+
+
 ## Stores Analysis
 ##
 #### Top 3 Stores in terms of revenue `r p` were: 

@@ -127,3 +127,4 @@ plt12 <- bar_order_flower(df_flower_analysis)
 # Render the .Rmd file to create .html output document
 rmarkdown::render("Parviflora_report.Rmd", output_dir = 'output/')
 
+summary(daff)
