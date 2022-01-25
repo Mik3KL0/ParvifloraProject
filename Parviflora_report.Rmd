@@ -16,28 +16,6 @@ source(list.files(pattern = "4_analysis*.R$", recursive = TRUE))
 p <- get_period_header(daff)
 ```
 
-## Data Overview
-
-```{r overview, echo=FALSE}
-print("Totals summary for Jan")
-daff %>%
-  filter(month == 1) %>%
-  select(count_total, rev_total) %>%
-  summary()
-print("Totals summary for Feb")
-daff %>%
-  filter(month == 2) %>%
-  select(count_total, rev_total) %>%
-  summary()
-print("Totals summary for March")
-daff %>%
-  filter(month == 3) %>%
-  select(count_total, rev_total) %>%
-  summary() %>%
-
-```
-
-
 ## Stores Analysis
 ##
 #### Top 3 Stores in terms of revenue `r p` were: 
@@ -74,8 +52,7 @@ bar_tot_flower(flower_analysis, p, what = "count", save = FALSE)
 
 ### Monthly revenues of Parviflora
 ``` {r monthly_rev_total, echo= FALSE}
-plot3 <- Kuba_plot(daff, save = FALSE)
-plot(plot3)
+Kuba_plot(daff, save = FALSE)
 ```
 
 ### 
@@ -93,7 +70,7 @@ hist_mean_order(flower_analysis, save=FALSE)
 
 
 #### Stores without the number in sales system for other flowers: 
-```{r missing, echo=FALSE}
+```{r missing_in_summary, echo=FALSE}
 # TODO Stores that didn't provide us with data in Total Sales Summary
 # e.g. store_id 345 doesn't exist in Stores data we need to flag those
 # dla Swiebodzina brak danych wszędzie
@@ -104,3 +81,7 @@ df_analysis_no_number %>%
   distinct(store_name, store_number)
 ```
 
+#### Stores without Store ID in Stores file but present in Daffodils system file: 
+```{r missing_in_stores, echo=FALSE}
+df_complete %>% select(store_name, store_id) %>% filter(store_name == 'unknown') %>% rename("Store ID (Daffodils System)" = store_id)
+```
