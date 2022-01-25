@@ -173,4 +173,16 @@ bar_order_flower <- function(df, save = TRUE) {
   
   return(plt2)
 }
-
+#total revenue of stores by month
+Kuba_plot <- function(df_analysis, period){
+  pltKuba <- df_analysis %>%
+    select(store_name, month, year, rev_total) %>% 
+    mutate(rev_total / 1000) 
+  pltKuba1 <- pltKuba[-c(1,4)]
+  pltKuba2 <- aggregate(x = pltKuba1$"rev_total/1000", by = list(pltKuba1$month), FUN = sum)
+  colnames(pltKuba2) <- c("month", "revenue")
+  
+  wykresiq <- ggplot(pltKuba2, aes(x = month, y = revenue)) +
+    geom_bar(stat="identity", fill = "#53AD70") + ggtitle(paste("Total Revenue of Parviflora stores in 1000zł"))
+  return(wykresiq)
+}

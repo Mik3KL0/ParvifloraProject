@@ -24,7 +24,7 @@ daff %>% select(store_name, month, rev_total) %>% group_by(store_name) %>% summa
 
 plot1 <- horizontal_bar_stores(daff, period = p, save=FALSE)
 plot(plot1)
-
+Kuba_plot(daff)
 
 ```
 
