@@ -75,20 +75,41 @@ bar_tot_flower_count <- function(df_analysis, period, save = TRUE){
   return(plt3)
 }
   
-gowno_plot_2 <- function(df_analysis, period, save = TRUE){
+sep_flow_count <- function(df_analysis, period, save = TRUE){
   'Scatterplot revenue to count by flower'
   df_col_flowers <- df_analysis %>% pivot_longer(6:13, names_to = "flower_types", values_to = "revenue/count")
   df_col_flowers2 <- df_col_flowers %>% separate(flower_types, c("revenue", "count"))
   
-  # napisa? F U N K C J E do total count per ka?dy badyl
-  pq1 <- df_analysis %>% select(month, count_Azalea)
-  zapaseq <- aggregate(x = pq1$count_Azalea, by = list(pq1$month), FUN = sum)
-  colnames(zapaseq) <- c("month", "count")
-    
-  zapoz <- ggplot(zapaseq, aes(x = month, y = count)) +
-    geom_bar(stat="identity") + ggtitle(paste("Total Revenue of Parviflora stores"))
-
-  print(zapoz)
+  # temp
+  period <- get_period_header(df_analysis)
+  
+  # creating lists for separate flowers and their counts per month
+  pqflow <- df_analysis %>% select(month, count_Azalea, count_Begonia, count_Carnation, count_Daffodil)
+  azaela <- aggregate(x = pqflow$count_Azalea, by = list(pqflow$month), FUN = sum)
+  begonia <- aggregate(x = pqflow$count_Begonia, by = list(pqflow$month), FUN = sum)
+  carnation <- aggregate(x = pqflow$count_Carnation, by = list(pqflow$month), FUN = sum)
+  daffodil <- aggregate(x = pqflow$count_Daffodil, by = list(pqflow$month), FUN = sum)
+  # naming the created columns for easy manipulation
+  colnames(azaela) <- c("month", "count")
+  colnames(begonia) <- c("month", "count")
+  colnames(carnation) <- c("month", "count")
+  colnames(daffodil) <- c("month", "count")
+  
+  # Creation of 4 separate charts for each flower
+  # Azalea
+  Tot_count_mo_azalea <- ggplot(azaela, aes(x = month, y = count)) +
+    geom_bar(stat="identity") + ggtitle(paste("Total count of Azalea flowers", period)) + ylim(0, 30000)
+  # Begonia
+  Tot_count_mo_begonia <- ggplot(begonia, aes(x = month, y = count)) +
+    geom_bar(stat="identity") + ggtitle(paste("Total count of Begonia flowers", period)) + ylim(0, 30000)
+  # Carnation
+  Tot_count_mo_carnation <- ggplot(carnation, aes(x = month, y = count)) +
+    geom_bar(stat="identity") + ggtitle(paste("Total count of Carnation flowers", period)) + ylim(0, 30000)
+  # Daffodil
+  Tot_count_mo_daffodil <- ggplot(daffodil, aes(x = month, y = count)) +
+    geom_bar(stat="identity") + ggtitle(paste("Total count of Daffodil flowers", period)) + ylim(0, 30000)
+  
+  list(Tot_count_mo_azalea, Tot_count_mo_begonia, Tot_count_mo_carnation, Tot_count_mo_daffodil)
 }
 
 

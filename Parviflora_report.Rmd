@@ -50,4 +50,7 @@ df_analysis_no_number %>%
 bar_order_flower(daff, save=FALSE)
 ```
 
+```{r separate flower counts, fig.show="hold", out.width="50%", echo=FALSE}
+sep_flow_count(daff, save=FALSE)
+```
 

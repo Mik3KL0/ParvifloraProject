@@ -101,7 +101,7 @@ diverging_bar_stores(df_analysis)
 horizontal_bar_stores_counts(df_analysis, p)
 
 # plots referring to flowers
-gowno_plot_2(df_analysis, p)
+sep_flow_count(df_analysis, p)
 bar_tot_flower_count(df_analysis, p)
 bar_order_flower(df_analysis)
 
