@@ -15,24 +15,49 @@ source(list.files(pattern = "4_analysis*.R$", recursive = TRUE))
 p <- get_period_header(daff)
 ```
 
+## Stores Analysis
+##
 #### Top 3 Stores in terms of revenue `r p` were: 
 
 ``` {r top_revenue_stores_text, echo=FALSE}
 daff %>% select(store_name, month, rev_total) %>% group_by(store_name) %>% summarise(`Total Revenue` = sum(rev_total)) %>% arrange(desc(`Total Revenue`)) %>% head(3)
+
 ```
-```{r top_revenue_stores_bar1, echo=FALSE}
+
+```{r top_revenue_stores_bar1, fig.show="hold", out.width="50%", echo=FALSE}
 
 plot1 <- horizontal_bar_stores(daff, period = p, save=FALSE)
+plot2 <- horizontal_bar_stores_counts(daff, p, save = FALSE)
 plot(plot1)
-Kuba_plot(daff)
+plot(plot2)
 
 ```
-
+### Store performance relative to mean
+The horizontal axis indicates how many standard deviations from the mean is the store's revenue
 
 ```{r norm_rev_stores, echo=FALSE}
 diverging_bar_stores(daff, save=FALSE)
 ```
 
+### Monthly revenues of Parviflora
+``` {r monthly_rev_total, echo= FALSE}
+plot3 <- Kuba_plot(daff, save = FALSE)
+plot(plot3)
+```
+
+### How many flowers of each type sells in particular store
+``` {r flower_count_per_store, echo = FALSE}
+
+```
+
+### What is the revenue per order for each flower type
+```{r bar_order, echo=FALSE}
+bar_order_flower(daff, save=FALSE)
+```
+
+```{r separate flower counts, fig.show="hold", out.width="50%", echo=FALSE}
+sep_flow_count(daff, save=FALSE)
+```
 
 #### Stores without the number in sales system for other flowers: 
 ```{r missing, echo=FALSE}
@@ -46,11 +71,10 @@ df_analysis_no_number %>%
   distinct(store_name, store_number)
 ```
 
-```{r bar_order, echo=FALSE}
-bar_order_flower(daff, save=FALSE)
-```
+TODO:
+1. Colors per flower mapping 
+2. Bar chart - flowers count per store - use: df_flower_analysis
+3. Scatter plot count vs. revenue (flower color)
+4. 
 
-```{r separate flower counts, fig.show="hold", out.width="50%", echo=FALSE}
-sep_flow_count(daff, save=FALSE)
-```
 

@@ -10,7 +10,7 @@ Sys.setlocale("LC_CTYPE", "Polish")
 library(tidyverse)
 library(readxl)
 library(ggplot2)
-
+library(viridis)
 
 ### SUMMARY OF SALES ####
 
@@ -89,6 +89,14 @@ tryCatch( # Just an experiment with tryCatch in R ... ugly syntax
 # save .csv file as well in case anyone not familiar with R would like to make own analysis on raw data e.g. in Excel
 write.csv2(df_complete, 'output/integrated_data.csv')
 
+# This data.frame is better when dealing with flower types analysis
+df_flower_analysis <- df_analysis %>%
+  tidyr::pivot_longer(count_Azalea:rev_Daffodil, names_to = 'flower', values_to = 'value') %>%  #pivoting data to make plotting possible
+  separate(col = flower, into = c("value_lab", "flower"), sep = "\\_") %>% 
+  pivot_wider(names_from = value_lab, values_from = value) %>% 
+  mutate(flower = as.factor(flower)) %>% # flower column as factor
+  select(-count_total, -rev_total) # drop unecessary columns - we can pbtain them by summarise() anyway
+
 
 ### ANALYSIS ###
 # output plots to output/ directory
@@ -96,14 +104,17 @@ source(list.files(pattern = "4_analysis*.R$", recursive = TRUE))
 
 p <- get_period_header(df_analysis)
 # Plots referring to stores revenue
-horizontal_bar_stores(df_analysis, period = p)
-diverging_bar_stores(df_analysis)
-horizontal_bar_stores_counts(df_analysis, p)
+plt1 <- horizontal_bar_stores(df_analysis, period = p)
+plt2 <- diverging_bar_stores(df_analysis)
+plt3 <- horizontal_bar_stores_counts(df_analysis, p)
 
 # plots referring to flowers
-sep_flow_count(df_analysis, p)
-bar_tot_flower_count(df_analysis, p)
-bar_order_flower(df_analysis)
+plt4 <- sep_flow_count(df_analysis, p) # Michala syf
+plt5 <- bar_tot_flower_count(df_analysis, p)
+plt6 <- bar_order_flower(df_analysis)
+plt7 <- bar_flower_month(df_analysis, pos="rev")
+plt8 <- Kuba_plot(df_analysis, p)
+
 
 # Render the .Rmd file to create .html output document
 rmarkdown::render("Parviflora_report.Rmd", output_dir = 'output/')

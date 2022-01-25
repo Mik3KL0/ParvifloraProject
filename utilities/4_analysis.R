@@ -43,8 +43,10 @@ horizontal_bar_stores <- function(df, period, save = TRUE) {
   # create plot regarding total revenue
   # TODO make it more pretty (delete "Parviflora" maybe?) and add some space on the right side 
   plt <- ggplot(df, aes(x = reorder(store_name, rev_total) , y = rev_total)) + 
-    geom_bar(stat="identity") + coord_flip() + 
-    xlab("Store Name") + ylab("Total Revenue") + ggtitle(paste("Total Revenue of Parviflora stores", period))
+    geom_bar(stat="identity", fill = '#26329C') + coord_flip() + 
+    xlab("") + ylab("Total Revenue") + ggtitle(paste("Total Revenue of Parviflora stores", period)) + scale_y_reverse() + 
+    theme(axis.text.y=element_blank(),  #remove y axis labels 
+          axis.ticks.y=element_blank()) # remove ticks
   
   # If the argument is TRUE then save the plot, intended to save it inside main script, but don't do it when running .Rmd file
   if (save) {
@@ -97,7 +99,7 @@ sep_flow_count <- function(df_analysis, period, save = TRUE){
   
   # Creation of 4 separate charts for each flower
   # Azalea
-  Tot_count_mo_azalea <- ggplot(azaela, aes(x = month, y = count)) +
+  Tot_count_mo_azalea <- ggplot(azaela, aes(x = month, y = count), color=month) +
     geom_bar(stat="identity") + ggtitle(paste("Total count of Azalea flowers", period)) + ylim(0, 30000)
   # Begonia
   Tot_count_mo_begonia <- ggplot(begonia, aes(x = month, y = count)) +
@@ -116,9 +118,9 @@ sep_flow_count <- function(df_analysis, period, save = TRUE){
 horizontal_bar_stores_counts <- function(df_analysis, period, save = TRUE){
   'Amount of flowers sold in total over the three month period. Weirdly, high discrepancy in revenue and counts for Katowice or Rzesz?w'
   
-  plt <- ggplot(df_analysis, aes(x = reorder(store_name, count_total) , y = count_total)) + 
-    geom_bar(stat="identity") + coord_flip() + 
-    xlab("Store Name") + ylab("Total Count") + ggtitle(paste("Total Flower Counts of Parviflora stores", period))
+  plt <- ggplot(df_analysis, aes(x = reorder(store_name, rev_total) , y = count_total)) + 
+    geom_bar(stat="identity", fill = '#209880') + coord_flip() + 
+    xlab("") + ylab("Total Count") + ggtitle(paste("Total Flower Counts of Parviflora stores", period))
   
   if (save) {
     save_plot("tot_count_stores.png")
@@ -195,7 +197,7 @@ bar_order_flower <- function(df, save = TRUE) {
   return(plt2)
 }
 #total revenue of stores by month
-Kuba_plot <- function(df_analysis, period){
+Kuba_plot <- function(df_analysis, period, save = TRUE){
   pltKuba <- df_analysis %>%
     select(store_name, month, year, rev_total) %>% 
     mutate(rev_total / 1000) 
@@ -205,10 +207,14 @@ Kuba_plot <- function(df_analysis, period){
   
   wykresiq <- ggplot(pltKuba2, aes(x = month, y = revenue)) +
     geom_bar(stat="identity", fill = "#53AD70") + ggtitle(paste("Total Revenue of Parviflora stores in 1000zł"))
+  
+  if (save) {
+    save_plot("Rev_by_month.png")
+  }
   return(wykresiq)
 }
 
-bar_flower_month <- function(df, pos = c("rev", "count"), daf = TRUE) {
+bar_flower_month <- function(df, pos = c("rev", "count"), daf = TRUE, save=TRUE) {
   '
   Function creates a facet grid of bar charts with flower data for separate month in each plot.
   Inputs:
@@ -219,13 +225,18 @@ bar_flower_month <- function(df, pos = c("rev", "count"), daf = TRUE) {
     <- ggplot chart
   '
   
-  df %>%
+  df <- df %>%
     tidyr::pivot_longer(count_Azalea:rev_Daffodil, names_to = 'flower', values_to = 'value') %>%  #pivoting data to make plotting possible
     dplyr::filter(stringr::str_detect(flower, pos)) %>% #filtering to rows with only count or revenue (depending on the pos argument)
     dplyr::filter(!flower == ifelse(daf == FALSE, 'rev_Daffodil', ''))  %>% #filtering out Daffodil data (depending on the daf argument)
-    dplyr::mutate(month_new = factor(month, levels = c(min(month):max(month)))) %>% #creating new month column to later arrange months in order
+    dplyr::mutate(month_new = factor(month, levels = c(min(month):max(month)))) #creating new month column to later arrange months in order
     #dplyr::mutate(daffodil_flag = ifelse(str_detect(flower, '_Daffodil'), 1, 0)) %>% This line adds a flag to the data if we wanted to color only one of the bars (here Daffodils), then it is neccessary to add fill argument to aes in ggplot
-    ggplot(aes(x = reorder(flower, -value), y = value)) + geom_bar(stat = "identity") + facet_grid(.~reorder(month.name[month_new], month)) #creating a facet grid
+  plt <- df %>%  ggplot(aes(x = reorder(flower, -value), y = value)) + geom_bar(stat = "identity") + 
+            facet_grid(.~reorder(month.name[month_new], month)) + #creating a facet grid 
+            theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) #+ Scale_y_continuous()
   
-  
+  if (save) {
+    save_plot("flowers_by_month.png")
+  }
+  return(plt)
 }
