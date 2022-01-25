@@ -56,63 +56,49 @@ horizontal_bar_stores <- function(df, period, save = TRUE) {
   return(plt)
 }
 
-bar_tot_flower_count <- function(df_analysis, period, save = TRUE){
-  # selected a specific column range, we might want to replace it with a function so that the chart works with new inputs
-  # two tables for both count and revenue, could be easier by making one table with flowers in columns
-  df_col_flowers <- df_analysis %>% pivot_longer(6:13, names_to = "flower_types", values_to = "revenue/count")
-  df_col_flowers_rev <- df_col_flowers %>% filter(str_detect(flower_types, 'rev')) %>% rename(revenue = `revenue/count`)
-  df_col_flowers_cnt <- df_col_flowers %>% filter(str_detect(flower_types, 'count')) %>% rename(flower_count = `revenue/count`)
-
-  # temp
-  period <- get_period_header(df_analysis)
+bar_tot_flower <- function(df, period, what, save = TRUE){
+  if (what == 'count') {
+    
+    plt_count <- df %>% ggplot(aes(x = count, y = reorder(flower, count), fill = flower)) +
+      geom_bar(stat='identity') + xlab("Count") + ylab("Flower Types") + ggtitle(paste("Total Count by Flower", period))
+    
+    if (save) {
+      save_plot("bar_tot_flower_count.png")
+    }
+    
+    return(plt_count)
   
-  plt3 <- ggplot(df_col_flowers_cnt, aes(x = flower_count, y = reorder(flower_types, flower_count))) +
-    geom_bar(stat='identity') + xlab("Count") + ylab("Flower Types") + ggtitle(paste("Total Count by Flower", period)) + 
-    scale_fill_brewer(palette = "Blues")
+  } else {
+  
+  plt_rev <- df %>% ggplot(aes(x = rev, y = reorder(flower, rev), fill = flower)) +
+    geom_bar(stat='identity') + xlab("Revenue") + ylab("Flower Types") + ggtitle(paste("Total Revenue by Flower", period)) + 
+    scale_x_continuous(labels = scales::comma)
+  
+    if (save) {
+      save_plot("bar_tot_flower_rev.png")
+    }
+    
+  return(plt_rev)  
+  }
+}
+ 
+ 
+sep_flow_count <- function(df_analysis, period, save = TRUE){
+  'Scatterplot rof ount by flower'
 
+  tot_count_mo_flow <- df_flower_analysis %>% dplyr::mutate(month_new = factor(month, levels = c(min(month):max(month))))
+  
+  plt <- tot_count_mo_flow %>% ggplot(aes(x = reorder(flower, -count), y = count, fill = flower)) +
+    geom_bar(stat='identity') + facet_grid(.~reorder(month.name[month_new], month)) +
+    xlab("Flower Type") + ylab("Total Count") + ggtitle(paste("Total count of flowers by month", period)) +
+    theme(axis.text.x = element_text(angle = 45, vjust = 0.5))
+  
   if (save) {
-    save_plot("bar_tot_flower_count.png")
+    save_plot("flowers_by_month_count.png")
   }
   
-  return(plt3)
-}
-  
-sep_flow_count <- function(df_analysis, period, save = TRUE){
-  'Scatterplot revenue to count by flower'
-  df_col_flowers <- df_analysis %>% pivot_longer(6:13, names_to = "flower_types", values_to = "revenue/count")
-  df_col_flowers2 <- df_col_flowers %>% separate(flower_types, c("revenue", "count"))
-  
-  # temp
-  period <- get_period_header(df_analysis)
-  
-  # creating lists for separate flowers and their counts per month
-  pqflow <- df_analysis %>% select(month, count_Azalea, count_Begonia, count_Carnation, count_Daffodil)
-  azaela <- aggregate(x = pqflow$count_Azalea, by = list(pqflow$month), FUN = sum)
-  begonia <- aggregate(x = pqflow$count_Begonia, by = list(pqflow$month), FUN = sum)
-  carnation <- aggregate(x = pqflow$count_Carnation, by = list(pqflow$month), FUN = sum)
-  daffodil <- aggregate(x = pqflow$count_Daffodil, by = list(pqflow$month), FUN = sum)
-  # naming the created columns for easy manipulation
-  colnames(azaela) <- c("month", "count")
-  colnames(begonia) <- c("month", "count")
-  colnames(carnation) <- c("month", "count")
-  colnames(daffodil) <- c("month", "count")
-  
-  # Creation of 4 separate charts for each flower
-  # Azalea
-  Tot_count_mo_azalea <- ggplot(azaela, aes(x = month, y = count), color=month) +
-    geom_bar(stat="identity") + ggtitle(paste("Total count of Azalea flowers", period)) + ylim(0, 30000)
-  # Begonia
-  Tot_count_mo_begonia <- ggplot(begonia, aes(x = month, y = count)) +
-    geom_bar(stat="identity") + ggtitle(paste("Total count of Begonia flowers", period)) + ylim(0, 30000)
-  # Carnation
-  Tot_count_mo_carnation <- ggplot(carnation, aes(x = month, y = count)) +
-    geom_bar(stat="identity") + ggtitle(paste("Total count of Carnation flowers", period)) + ylim(0, 30000)
-  # Daffodil
-  Tot_count_mo_daffodil <- ggplot(daffodil, aes(x = month, y = count)) +
-    geom_bar(stat="identity") + ggtitle(paste("Total count of Daffodil flowers", period)) + ylim(0, 30000)
-  
-  list(Tot_count_mo_azalea, Tot_count_mo_begonia, Tot_count_mo_carnation, Tot_count_mo_daffodil)
-}
+  return(plt)
+  }
 
 
 horizontal_bar_stores_counts <- function(df_analysis, period, save = TRUE){
@@ -128,8 +114,6 @@ horizontal_bar_stores_counts <- function(df_analysis, period, save = TRUE){
   
   return(plt)
 }
-
-#===============================================================================================================================
 
 
 diverging_bar_stores <- function(df, save = TRUE) {
@@ -169,6 +153,7 @@ diverging_bar_stores <- function(df, save = TRUE) {
   return(plt1)
 }
 
+
 bar_order_flower <- function(df, save = TRUE) {
   '
   Function first creates data with mean order value for each flower (revenues / count), then plots it
@@ -186,7 +171,7 @@ bar_order_flower <- function(df, save = TRUE) {
   
   p1 <- ggplot(df_prep, aes(x = flower, y = mean_order_value, fill = flower)) + 
     geom_bar(stat = "identity") +
-    ylab('Average Order Value') + 
+    ylab('Average Order Value') + ggtitle("Mean order value of flowers") +
     theme(legend.position="none")
   
    if (save) {
@@ -217,7 +202,7 @@ Kuba_plot <- function(df_analysis, period, save = TRUE){
 }
 
 
-bar_flower_month <- function(df, daf = TRUE, save=TRUE) {
+bar_flower_month <- function(df, period, daf = TRUE,  save=TRUE) {
 
   '
   Function creates a facet grid of bar charts with flower revenue for separate month in each plot.
@@ -233,9 +218,9 @@ bar_flower_month <- function(df, daf = TRUE, save=TRUE) {
   
   plt <- ggplot(df_prep, aes(x = reorder(flower, -rev), y = rev, fill = flower)) + geom_bar(stat = "identity") +
     facet_grid(.~reorder(month.name[month], month)) + #creating a facet grid 
-    theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) + #+ Scale_y_continuous()
+    theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) + ggtitle(paste("Total revenue of flowers by month", period)) +
     xlab('') + ylab('Revenue') +
-    + theme(legend.position="none") +
+    theme(legend.position="none") +
     scale_y_continuous(labels = scales::comma)
   
   if (save) {
@@ -250,10 +235,10 @@ hist_mean_order <- function(df, save = TRUE){
   Próbna funkcja możemy ustalić czy się przyda
   '
   
-  df_prep <- df_flower_analysis %>%
-    dplyr::mutate(order_value = rev / count) %>%
+  df_prep <- df %>%
+    dplyr::mutate(order_value = rev / count)
     
-  plt <- ggplot(df_prep, aes(x = count, fill = flower)) + geom_histogram(bins = 8) + facet_grid(~flower, scales = "free_x")
+  plt <- ggplot(df_prep, aes(x = order_value, fill = flower)) + geom_histogram(bins = 8) + facet_grid(~flower, scales = "free_x") 
   
   if (save) {
     save_plot("histogram_mean_order.png")
@@ -280,6 +265,7 @@ scatter_count_rev <- function(df, period, save=TRUE){
   }
   return(plt)
 }
+
 
 
 flower_composition <- function(df, period, save=TRUE){

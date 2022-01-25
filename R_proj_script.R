@@ -10,7 +10,6 @@ Sys.setlocale("LC_CTYPE", "Polish")
 library(tidyverse)
 library(readxl)
 library(ggplot2)
-library(viridis)
 
 ### SUMMARY OF SALES ####
 
@@ -74,11 +73,21 @@ df_complete <- df_complete %>% mutate(rev_Daffodil = trans_amount,
 # Drop NAs from store_name and report them separately - flagged as "unkknown"
 df_analysis <- df_complete %>% filter(store_name != "unknown")
 
+# This data.frame is better when dealing with flower types analysis
+df_flower_analysis <- df_analysis %>%
+  tidyr::pivot_longer(count_Azalea:rev_Daffodil, names_to = 'flower', values_to = 'value') %>%  #pivoting data to make plotting possible
+  separate(col = flower, into = c("value_lab", "flower"), sep = "\\_") %>% 
+  pivot_wider(names_from = value_lab, values_from = value) %>% 
+  mutate(flower = as.factor(flower)) %>% # flower column as factor
+  select(-count_total, -rev_total) # drop unecessary columns - we can pbtain them by summarise() anyway
+
+
 # Save checkpoint file to /processed folder after data from both systems was integrated
 # this file may as well be used in .Rmd file
 tryCatch( # Just an experiment with tryCatch in R ... ugly syntax
     expr = {
       saveRDS(df_analysis, file = "data/processed/integrated_data.rds")
+      saveRDS(df_flower_analysis, file = "data/processed/tidy_data.rds") 
     }, # in case the above doesn't work - use recommended "here" library
     error = function(e){
       saveRDS(df_analysis, here::here("data", "processed", "integrated_data.rds"))
@@ -89,31 +98,30 @@ tryCatch( # Just an experiment with tryCatch in R ... ugly syntax
 # save .csv file as well in case anyone not familiar with R would like to make own analysis on raw data e.g. in Excel
 write.csv2(df_complete, 'output/integrated_data.csv')
 
-# This data.frame is better when dealing with flower types analysis
-df_flower_analysis <- df_analysis %>%
-  tidyr::pivot_longer(count_Azalea:rev_Daffodil, names_to = 'flower', values_to = 'value') %>%  #pivoting data to make plotting possible
-  separate(col = flower, into = c("value_lab", "flower"), sep = "\\_") %>% 
-  pivot_wider(names_from = value_lab, values_from = value) %>% 
-  mutate(flower = as.factor(flower)) %>% # flower column as factor
-  select(-count_total, -rev_total) # drop unecessary columns - we can pbtain them by summarise() anyway
-
 
 ### ANALYSIS ###
 # output plots to output/ directory
 source(list.files(pattern = "4_analysis*.R$", recursive = TRUE))
 
 p <- get_period_header(df_analysis)
+
 # Plots referring to stores revenue
 plt1 <- horizontal_bar_stores(df_analysis, period = p)
 plt2 <- diverging_bar_stores(df_analysis)
 plt3 <- horizontal_bar_stores_counts(df_analysis, p)
 
 # plots referring to flowers
-plt4 <- sep_flow_count(df_analysis, p) # Michala syf
-plt5 <- bar_tot_flower_count(df_analysis, p)
-plt6 <- bar_order_flower(df_analysis)
-plt7 <- bar_flower_month(df_analysis, pos="rev")
+plt4 <- flower_composition(df_flower_analysis, p)
+# First totals
+plt5 <- bar_tot_flower(df_flower_analysis, p, what = "rev")
+plt6 <- bar_tot_flower(df_flower_analysis, p, what = "count")
+plt7 <- scatter_count_rev(df_flower_analysis, p)
+# Monthly revenue
 plt8 <- Kuba_plot(df_analysis, p)
+plt9 <- bar_flower_month(df_flower_analysis, p)
+plt10 <- sep_flow_count(df_flower_analysis, p)
+plt11 <- hist_mean_order(df_flower_analysis)
+plt12 <- bar_order_flower(df_flower_analysis)
 
 
 # Render the .Rmd file to create .html output document
