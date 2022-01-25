@@ -2,15 +2,9 @@
 ---
   title: "Parviflora Project"
 subtitle: "Group project for Introduction to R classes"
-author: "Jakub Zapasnik (38401), Maciej Golik (46827), Paweł Jędrzejczak (46471), Daniel Lilla (38963), Michał Kloska (46341)"
-output: 
-  html_document:
-  number_sections: true
-editor_options: 
-  chunk_output_type: console
+authors: "Jakub Zapasnik (38401), Maciej Golik (46827), Paweł Jędrzejczak (46471), Daniel Lilla (38963), Michał Kloska (46341)"
 ---
 '
-# ^ wersja do tekstowego edytora z final assigmentem
   
 Sys.setlocale("LC_CTYPE", "Polish")
 library(tidyverse)
@@ -21,29 +15,27 @@ library(ggplot2)
 ### SUMMARY OF SALES ####
 
 source(list.files(pattern = "*process_sales_summaries*", recursive = TRUE))
-# TODO 
 
 # create a list of all Summary of Sales ... .csv files
-files_list <- list.files(pattern="^Summary.*csv$", recursive = TRUE)
-df_sales <- union_sales_data(files_list)
+summary_files_list <- list.files(pattern="^Summary.*csv$", recursive = TRUE)
+# create data.frame of total sales of all flowers other than Daffodils (for all months combined)
+df_sales <- union_sales_data(summary_files_list)
 
 
 ### DAFFODILS ####
 # notice that only functions appear when sourcing this script - no variables are defined there
 source(list.files(pattern = "*process_Daffodils*.r$", recursive = TRUE))
 
-# TODO - do it in utilities/2_..Daffodils.r file
-
-
 # use recursive = TRUE to get matching files in subdirectories
-paths <- list.files(pattern = "^Daffodils.*xls$", recursive = TRUE)
+daffodils_paths <- list.files(pattern = "^Daffodils.*xls$", recursive = TRUE)
 
 # For now we only have one year - thus one file [1] but what in the future?
 # NOT NECESSARY in this project - Create a loop to iterate through these files - [1] indicates this possibility as paths would be a vector if there are many files
+# summaries from the top of Daffodils file
+df_summary_daffodils <- merge_summaries(daffodils_paths[1]) 
 
-df_summary_daffodils <- merge_summaries(paths[1]) 
-
-df_daffodils <- combine_tables(paths[1], totals_only = TRUE)
+# data.frame with revenue and count of Daffodils at per store, month and year basis
+df_daffodils <- combine_tables(daffodils_paths[1], totals_only = TRUE)
 
 
 # Join with stores
@@ -51,7 +43,7 @@ df_daffodils <- combine_tables(paths[1], totals_only = TRUE)
 source(list.files(pattern = "*process_Stores*.R$", recursive = TRUE))
 # Find Stores data
 stores_file <- list.files(pattern="^Stores.*xlsx$", recursive = TRUE)
-# read the Stores data.frame - it is now a permutation of all stores with all possible months
+# read the Stores data.frame - it is now a Carthesian product of all stores with all possible months (and years if required)
 stores <- read_stores(stores_file, df_sales, df_daffodils)
 
 # Left join to Stores - all stores will be present at this stage! 
@@ -77,8 +69,9 @@ df_complete <- df_complete %>% mutate(rev_Daffodil = trans_amount,
   # However now the rev_total is not a really a total... should be updated
                                mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>% # first replace NAs (NA + 1 = NA)
                                mutate(rev_total = rev_total + rev_Daffodil)
+
                 
-# I think we should drop NAs from store_name and report them separately (KUBA) - flagged as "unkknown"
+# Drop NAs from store_name and report them separately - flagged as "unkknown"
 df_analysis <- df_complete %>% filter(store_name != "unknown")
 
 # Save checkpoint file to /processed folder after data from both systems was integrated
@@ -93,25 +86,25 @@ tryCatch( # Just an experiment with tryCatch in R ... ugly syntax
     }
   )
 
-# save .csv file as well in case anyone not familiar with R would like to make own analysis e.g. in Excel
+# save .csv file as well in case anyone not familiar with R would like to make own analysis on raw data e.g. in Excel
 write.csv2(df_complete, 'output/integrated_data.csv')
 
 
 ### ANALYSIS ###
-# output plots / files whatever to /output directory
+# output plots to output/ directory
 source(list.files(pattern = "4_analysis*.R$", recursive = TRUE))
 
 p <- get_period_header(df_analysis)
+# Plots referring to stores revenue
 horizontal_bar_stores(df_analysis, period = p)
+diverging_bar_stores(df_analysis)
+horizontal_bar_stores_counts(df_analysis, p)
 
-# TODO Stores that didn't provide us with data in Total Sales Summary
-# e.g. store_id 345 doesn't exist in Stores data we need to flag those
-# dla Swiebodzina brak danych wszędzie
+# plots referring to flowers
+gowno_plot_2(df_analysis, p)
+bar_tot_flower_count(df_analysis, p)
+bar_order_flower(df_analysis)
 
-df_analysis_no_number <- df_analysis[rowSums(is.na(df_analysis)) > 0, ]
-df_analysis_no_number %>%
-  select(store_name, store_number) %>%
-  distinct(store_name, store_number)
-# ^ teraz pokazuje sklepy bez numeru w czysty sposób
-
+# Render the .Rmd file to create .html output document
+rmarkdown::render("Parviflora_report.Rmd", output_dir = 'output/')
 

@@ -1,0 +1,53 @@
+---
+title: "Summary Report of Sales for Parviflora Stores"
+subtitle: "Data was gathered from system generated files for input period"
+date: "Generated: `r format(Sys.time(), '%d %B, %Y')` "
+output: 
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+
+daff <- read_rds("data/processed/integrated_data.rds")
+source(list.files(pattern = "4_analysis*.R$", recursive = TRUE))
+# get header used later
+p <- get_period_header(daff)
+```
+
+#### Top 3 Stores in terms of revenue `r p` were: 
+
+``` {r top_revenue_stores_text, echo=FALSE}
+daff %>% select(store_name, month, rev_total) %>% group_by(store_name) %>% summarise(`Total Revenue` = sum(rev_total)) %>% arrange(desc(`Total Revenue`)) %>% head(3)
+```
+```{r top_revenue_stores_bar1, echo=FALSE}
+
+plot1 <- horizontal_bar_stores(daff, period = p, save=FALSE)
+plot(plot1)
+
+
+```
+
+
+```{r norm_rev_stores, echo=FALSE}
+diverging_bar_stores(daff, save=FALSE)
+```
+
+
+#### Stores without the number in sales system for other flowers: 
+```{r missing, echo=FALSE}
+# TODO Stores that didn't provide us with data in Total Sales Summary
+# e.g. store_id 345 doesn't exist in Stores data we need to flag those
+# dla Swiebodzina brak danych wszędzie
+
+df_analysis_no_number <- daff[rowSums(is.na(daff)) > 0, ]
+df_analysis_no_number %>%
+  select(store_name, store_number) %>%
+  distinct(store_name, store_number)
+```
+
+```{r bar_order, echo=FALSE}
+bar_order_flower(daff, save=FALSE)
+```
+
+

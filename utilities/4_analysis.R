@@ -35,7 +35,7 @@ save_plot <- function(name) {
   
 }
 
-horizontal_bar_stores <- function(df, period) {
+horizontal_bar_stores <- function(df, period, save = TRUE) {
   '
   This function creates the horizontal bar chart of Total Revenue by store sorted best to worse.
   Same plot for count is rather not necessary - counts are interesting on per flower basis
@@ -46,11 +46,15 @@ horizontal_bar_stores <- function(df, period) {
     geom_bar(stat="identity") + coord_flip() + 
     xlab("Store Name") + ylab("Total Revenue") + ggtitle(paste("Total Revenue of Parviflora stores", period))
   
-  save_plot("tot_rev_stores.png")
+  # If the argument is TRUE then save the plot, intended to save it inside main script, but don't do it when running .Rmd file
+  if (save) {
+    save_plot("tot_rev_stores.png")
+  }
+  
   return(plt)
 }
 
-bar_tot_flower_count <- function(df_analysis, period){
+bar_tot_flower_count <- function(df_analysis, period, save = TRUE){
   # selected a specific column range, we might want to replace it with a function so that the chart works with new inputs
   # two tables for both count and revenue, could be easier by making one table with flowers in columns
   df_col_flowers <- df_analysis %>% pivot_longer(6:13, names_to = "flower_types", values_to = "revenue/count")
@@ -64,16 +68,19 @@ bar_tot_flower_count <- function(df_analysis, period){
     geom_bar(stat='identity') + xlab("Count") + ylab("Flower Types") + ggtitle(paste("Total Count by Flower", period)) + 
     scale_fill_brewer(palette = "Blues")
 
-  save_plot("bar_tot_flower_count.png")
+  if (save) {
+    save_plot("bar_tot_flower_count.png")
+  }
+  
   return(plt3)
 }
   
-gowno_plot_2 <- function(df_analysis, period){
+gowno_plot_2 <- function(df_analysis, period, save = TRUE){
   'Scatterplot revenue to count by flower'
   df_col_flowers <- df_analysis %>% pivot_longer(6:13, names_to = "flower_types", values_to = "revenue/count")
   df_col_flowers2 <- df_col_flowers %>% separate(flower_types, c("revenue", "count"))
   
-  # napisa� F U N K C J E do total count per ka�dy badyl
+  # napisa? F U N K C J E do total count per ka?dy badyl
   pq1 <- df_analysis %>% select(month, count_Azalea)
   zapaseq <- aggregate(x = pq1$count_Azalea, by = list(pq1$month), FUN = sum)
   colnames(zapaseq) <- c("month", "count")
@@ -83,21 +90,26 @@ gowno_plot_2 <- function(df_analysis, period){
 
   print(zapoz)
 }
-horizontal_bar_stores_counts <- function(df_analysis, get_period_header){
+
+
+horizontal_bar_stores_counts <- function(df_analysis, period, save = TRUE){
   'Amount of flowers sold in total over the three month period. Weirdly, high discrepancy in revenue and counts for Katowice or Rzesz?w'
   
-  ggplot(df_analysis, aes(x = reorder(store_name, count_total) , y = count_total)) + 
+  plt <- ggplot(df_analysis, aes(x = reorder(store_name, count_total) , y = count_total)) + 
     geom_bar(stat="identity") + coord_flip() + 
-    xlab("Store Name") + ylab("Total Count") + ggtitle(paste("Total Flower Counts of Parviflora stores", get_period_header))
+    xlab("Store Name") + ylab("Total Count") + ggtitle(paste("Total Flower Counts of Parviflora stores", period))
   
-  save_plot("tot_count_stores.png")
-  return(plt5)
+  if (save) {
+    save_plot("tot_count_stores.png")
+  }
+  
+  return(plt)
 }
 
 #===============================================================================================================================
 
 
-diverging_bar_stores <- function(df) {
+diverging_bar_stores <- function(df, save = TRUE) {
   '
   Function creates Diverging bar chart as shown here: http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html
   Input:
@@ -127,11 +139,14 @@ diverging_bar_stores <- function(df) {
     theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))  +
     coord_flip()
   
-  save_plot("Normalized_Revenue_per_Store.png")
+  if (save) {
+    save_plot("Normalized_Revenue_per_Store.png")
+  }
+  
   return(plt1)
 }
 
-bar_order_flower <- function(df) {
+bar_order_flower <- function(df, save = TRUE) {
   '
   Function first creates data with mean order value for each flower (revenues / count), then plots it
   NIE MAM ZBYTNIO POMYSŁU NA TEN WYKRES, BO NA TĄ CHWILĘ WYGLĄDA ŚREDNIO XD
@@ -152,8 +167,10 @@ bar_order_flower <- function(df) {
 
    plt2 <- ggplot(df_order, aes(x = flower, y = mean_order_value)) + geom_bar(stat = "identity")
   
-  save_plot("Mean_Order_per_Flower.png")
+   if (save) {
+     save_plot("Mean_Order_per_Flower.png")
+   }
+  
   return(plt2)
 }
 
-#>>>>>>> 6ce7f2fc57cc2ad6859053f450b4c470cfef9f05

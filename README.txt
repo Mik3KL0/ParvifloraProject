@@ -14,6 +14,7 @@ This section provides overview of the structure and explains components
 
 ParvifloraProject  
     ├── R_project_script.R
+    ├── Parviflora_report.Rmd
     ├── LICENSE
     ├── README.txt
     ├── data 
@@ -29,28 +30,31 @@ ParvifloraProject
 
   * R_project_script.R - the main orchestrating script, the only 	one which executes any code. It imports functions from 		scripts in /utilities directory and uses them to process 	data. If one is interested to see the pipeline steps - 		it's here. Not all the code was 'hidden' tough. Some 		crucial steps like joining data from different sources 		was kept here as it helps to understand the logic.
 
-  * data - directory where raw files with data should be placed, 		the program reads data from this location
-	 - /processed sub-directory - intended to store 			intermediate results of operation here in .Rds 			format for "checkpoint" access
+  * Parviflora_report.Rmd - the RMarkdown file that generates the report dynamically from the data that it reads from integrated_data.Rds file in data/processed/ directory
+
+  * data - directory where raw files with data should be placed, the program reads data from this location
+	 - /processed sub-directory - intended to store 			intermediate results of operation here in .Rds format for "checkpoint" access
   
-  * output - directory where all the output from program will be 	stored .xlsx or .html reports can go directly here. 		Plots should be saved to /plots sub-dir.
+  * output - directory where all the output from program will be stored .csv or .html reports can go directly here. Plots should be saved to /plots sub-dir.
   
-  * utilities - scripts that define functions and constants used 	by those functions (e.g. column names for reading). 		Example: "process_Daffodils.r" will define functions 		that are used to process data from Daffodils sales 		system.
+  * utilities - scripts that define functions and constants used by those functions (e.g. column names for reading). 
+	Example: "process_Daffodils.r" will define functions that are used to process data from Daffodils sales system.
 
 4. How to use the project
 
   1) Import sales data from company systems into /data directory
 	- 1 "Stores.xlsx" file
-	- 1 "Daffodilsyyyy.xls" file with as many months as 		  sheets as needed e.g.
-	- x "Summary of Sales MMMM yyyy" files - format matters 	  as month and year information are extracted from name
+	- 1 "Daffodilsyyyy.xls" file with as many months as sheets as needed e.g.
+	- x "Summary of Sales MMMM yyyy" files - format matters as month and year information are extracted from name
 
   2) Run the code in R_project_script.R file
-	* check if the file runs from terminal
-	* if no add here that only possible in RStudio
+	* possible both in RStudio and Terminal/CLI
+	* for Terminal/CLI operation first change directory to the project (cd path/to/ParfivloraProject) and run "Rscript R_proj_script.R"
 
   3) The outputs are in the output folder: 
-	- plots showing
-	? .html document with summary information
-	? SummaryRaport.xlsx file with totals data after it has been processed - for the user to have access and possibility to make own, more detailed analysis
+	- plots saved in .png format
+	- Parviflora_report.html document with summary information and plots
+	- integrated_data.csv file with totals data after it has been processed - for the user to have access and possibility to have access to data
 
 
 #### Authors

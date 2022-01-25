@@ -78,17 +78,17 @@ union_sales_data <- function(file_paths){
     }
   
   # make a UNION - bind list of data.frames together
-  df_sales <- dplyr::bind_rows(sales_dflist)
+  df_tot_sales <- dplyr::bind_rows(sales_dflist)
   df_rest <- dplyr::bind_rows(discarded_dflist)
   
   # columns with count and revenue are read as character - change them to numeric using the fact that names are meaningful 
   # colnames as list -> selection str_start for "count" and "rev", so only columns for stores counts and revenues are selected 
-  clmns <- colnames(df_sales)
+  clmns <- colnames(df_tot_sales)
   clmns_to_cast <- clmns[str_starts(clmns, "count") | str_starts(clmns, "rev")]
   # previously selected counts and revenues converted to numeric
-  df_sales <- df_sales %>% mutate_at(clmns_to_cast, ~as.numeric(.))
+  df_tot_sales <- df_tot_sales %>% mutate_at(clmns_to_cast, ~as.numeric(.))
 
-  ls_df <- list("df_totals" = df_sales, "df_rest" = df_rest)
+  ls_df <- list("df_totals" = df_tot_sales, "df_rest" = df_rest)
   
   # For now returning only the totals object - may change behaviour in the future if other data will be required
   return(ls_df$df_totals)
