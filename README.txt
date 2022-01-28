@@ -24,9 +24,9 @@ ParvifloraProject
     |     └── plots  
     └── utilities
           ├── 1_process_sales_summaries.R
-	  ├── 2_process_Daffodils.r
-	  ├── 3_process_Stores.R
-	  └── 4_analysis.R
+	        ├── 2_process_Daffodils.r
+	        ├── 3_process_Stores.R
+	        └── 4_analysis.R
 
   * R_project_script.R - the main orchestrating script, the only 	one which executes any code. It imports functions from 		scripts in /utilities directory and uses them to process 	data. If one is interested to see the pipeline steps - 		it's here. Not all the code was 'hidden' tough. Some 		crucial steps like joining data from different sources 		was kept here as it helps to understand the logic.
 

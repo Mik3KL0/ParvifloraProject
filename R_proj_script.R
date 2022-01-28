@@ -7,11 +7,18 @@ authors: "Jakub Zapasnik (38401), Maciej Golik (46827), Paweł Jędrzejczak (464
 '
   
 Sys.setlocale("LC_CTYPE", "Polish")
+Sys.setenv("LANGUAGE"="PL")
 library(tidyverse)
 library(readxl)
 library(ggplot2)
 
-### SUMMARY OF SALES ####
+#### Read in STORES ####
+source(list.files(pattern = "*process_Stores*.R$", recursive = TRUE))
+# Find Stores data
+stores_file <- list.files(pattern="^Stores.*xlsx$", recursive = TRUE)
+df_stores <- read_stores(stores_file)
+
+#### SUMMARY OF SALES ####
 
 source(list.files(pattern = "*process_sales_summaries*", recursive = TRUE))
 
@@ -19,7 +26,11 @@ source(list.files(pattern = "*process_sales_summaries*", recursive = TRUE))
 summary_files_list <- list.files(pattern="^Summary.*csv$", recursive = TRUE)
 # create data.frame of total sales of all flowers other than Daffodils (for all months combined)
 df_sales <- union_sales_data(summary_files_list)
+# Fix the stores' names based on Stores.xlsx file - the new name is in column store_loc_fixed
+df_sales <- fix_store_names(df_sales, correct_names = df_stores$store_location)
 
+df_sales_totals <- get_sales(df_sales, "total")
+#df_sales_gross <- get_sales(df_sales, "gross")
 
 ### DAFFODILS ####
 # notice that only functions appear when sourcing this script - no variables are defined there
@@ -37,19 +48,15 @@ df_summary_daffodils <- merge_summaries(daffodils_paths[1])
 df_daffodils <- combine_tables(daffodils_paths[1], totals_only = TRUE)
 
 
-# Join with stores
-### Read in STORES ####
-source(list.files(pattern = "*process_Stores*.R$", recursive = TRUE))
-# Find Stores data
-stores_file <- list.files(pattern="^Stores.*xlsx$", recursive = TRUE)
-# read the Stores data.frame - it is now a Carthesian product of all stores with all possible months (and years if required)
-stores <- read_stores(stores_file, df_sales, df_daffodils)
+#### JOINING ####
+# change stores data.frame - it is now a Carthesian product of all stores with all possible months and years
+df_stores <- get_carthprod_of_periods(df_stores, df_sales_totals, df_daffodils)
 
-# Left join to Stores - all stores will be present at this stage! 
-# Even those with all NULLs are present - meaning no sales of other flowers in these stores
+# Left join to Stores (by Fixed name) - all stores will be present at this stage! 
+# Even those with all NULLs are present - meaning no sales of other flowers in these stores in this month
 # (i.e. later join Daffodil data so we NEED them)
-df_stores_sales <- stores %>% left_join(select(df_sales, -"store_name"), 
-                                        by = c("store_id" = "store_id",
+df_stores_sales <- df_stores %>% full_join(df_sales_totals, 
+                                        by = c("store_location" = "store_loc_fixed",
                                                "month" = "month_id", "year" = "year_id"))
 
 ### JOIN Daffodils to Sales Summaries ###
@@ -67,10 +74,11 @@ df_complete <- df_complete %>% mutate(rev_Daffodil = trans_amount,
                                mutate(store_name = ifelse(is.na(store_name), "unknown", store_name)) %>%
   # However now the rev_total is not a really a total... should be updated
                                mutate_if(is.numeric, ~replace(., is.na(.), 0)) %>% # first replace NAs (NA + 1 = NA)
-                               mutate(rev_total = rev_total + rev_Daffodil)
+                               mutate(rev_total = rev_total + rev_Daffodil, 
+                                      count_total = count_total + count_Daffodil)
 
                 
-# Drop NAs from store_name and report them separately - flagged as "unkknown"
+# Drop NAs from store_name and report them separately - flagged as "unknown"
 df_analysis <- df_complete %>% filter(store_name != "unknown")
 
 # This data.frame is better when dealing with flower types analysis
@@ -79,7 +87,7 @@ df_flower_analysis <- df_analysis %>%
   separate(col = flower, into = c("value_lab", "flower"), sep = "\\_") %>% 
   pivot_wider(names_from = value_lab, values_from = value) %>% 
   mutate(flower = as.factor(flower)) %>% # flower column as factor
-  select(-count_total, -rev_total) # drop unecessary columns - we can pbtain them by summarise() anyway
+  select(-count_total, -rev_total) # drop unnecessary columns - we can obtain them by summarise() anyway
 
 
 # Save checkpoint file to /processed folder after data from both systems was integrated
@@ -127,4 +135,3 @@ plt12 <- bar_order_flower(df_flower_analysis)
 # Render the .Rmd file to create .html output document
 rmarkdown::render("Parviflora_report.Rmd", output_dir = 'output/')
 
-summary(daff)

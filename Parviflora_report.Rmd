@@ -69,19 +69,11 @@ hist_mean_order(flower_analysis, save=FALSE)
 ```
 
 
-#### Stores without the number in sales system for other flowers: 
-```{r missing_in_summary, echo=FALSE}
-# TODO Stores that didn't provide us with data in Total Sales Summary
-# e.g. store_id 345 doesn't exist in Stores data we need to flag those
-# dla Swiebodzina brak danych wszędzie
-
-df_analysis_no_number <- daff[rowSums(is.na(daff)) > 0, ]
-df_analysis_no_number %>%
-  select(store_name, store_number) %>%
-  distinct(store_name, store_number)
-```
-
 #### Stores without Store ID in Stores file but present in Daffodils system file: 
 ```{r missing_in_stores, echo=FALSE}
-df_complete %>% select(store_name, store_id) %>% filter(store_name == 'unknown') %>% rename("Store ID (Daffodils System)" = store_id)
+# This part of the code will not work if .Rmd file is run separately not from main script
+# We would need to save the df_complete data.frame and then load it from .Rds file
+df_complete %>% select(store_name, store_id) %>% filter(store_name == 'unknown' & 
+                                                        store_id != 0) %>% rename("Store ID (Daffodils System)"=store_id)
 ```
+
